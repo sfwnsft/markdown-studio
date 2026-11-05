@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Studio - Live Editor & Exporter</title>
+  <meta name="description" content="A minimalist, high-contrast Markdown live editor and exporter running entirely in your browser.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <header class="navbar" role="banner">
+    <div class="navbar-left">
+      <div class="brand">
+        <h1 class="brand-title">MARKDOWN<span class="brand-tag">STUDIO</span></h1>
+        <span class="author-credit">by <strong>Safwan</strong></span>
+      </div>
+    </div>
+
+    <div class="navbar-center">
+      <div class="stats-badge" id="statsBadge" aria-live="polite">
+        <span class="stat-item"><strong id="wordCount">0</strong> <span>words</span></span>
+        <span class="stat-divider" aria-hidden="true">•</span>
+        <span class="stat-item"><strong id="charCount">0</strong> <span>chars</span></span>
+        <span class="stat-divider" aria-hidden="true">•</span>
+        <span class="stat-item"><strong id="lineCount">0</strong> <span>lines</span></span>
+      </div>
+    </div>
+
+    <div class="navbar-right">
+      <div class="view-switcher" id="viewSwitcher" role="tablist" aria-label="Editor View">
+        <button class="view-btn active" data-view="split" title="Split Screen View" role="tab" aria-selected="true">
+          <i class="fa-solid fa-table-columns" aria-hidden="true"></i>
+          <span>Split</span>
+        </button>
+        <button class="view-btn" data-view="editor" title="Editor Only View" role="tab" aria-selected="false">
+          <i class="fa-solid fa-code" aria-hidden="true"></i>
+          <span>Editor</span>
+        </button>
+        <button class="view-btn" data-view="preview" title="Preview Only View" role="tab" aria-selected="false">
+          <i class="fa-regular fa-eye" aria-hidden="true"></i>
+          <span>Preview</span>
+        </button>
+      </div>
+
+      <div class="btn-group">
+        <a href="mailto:sfwnsft@tutamail.com" class="btn btn-secondary contact-btn" title="Contact Safwan" aria-label="Contact via email">
+          <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+          <span class="btn-text">Contact</span>
+        </a>
+        <button id="btnClear" class="btn btn-secondary" title="Clear Editor" aria-label="Clear document">
+          <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+          <span class="btn-text">Clear</span>
+        </button>
+        <button id="btnExportMd" class="btn btn-secondary" title="Download Markdown (.md)" aria-label="Export Markdown">
+          <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+          <span class="btn-text">.MD</span>
+        </button>
+        <button id="btnExportPdf" class="btn btn-primary" title="Export as PDF (.pdf)" aria-label="Export PDF">
+          <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
+          <span class="btn-text">PDF</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace-container" id="workspaceContainer">
+    <section class="pane editor-pane" id="editorPane" aria-label="Markdown Input">
+      <div class="pane-header">
+        <div class="pane-header-left">
+          <div class="pane-label">
+            <i class="fa-solid fa-align-left" aria-hidden="true"></i>
+            <span>EDITOR</span>
+          </div>
+          <span class="pane-label-sep" aria-hidden="true">•</span>
+          <div class="save-status" id="saveStatus" role="status" aria-live="polite">
+            <i class="fa-solid fa-check" aria-hidden="true"></i>
+            <span>Saved</span>
+          </div>
+        </div>
+        <div class="toolbar" role="toolbar" aria-label="Formatting Tools">
+          <button class="tool-btn" id="btnUndo" title="Undo (Ctrl + Z)" aria-label="Undo" disabled>
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" id="btnRedo" title="Redo (Ctrl + Y / Ctrl + Shift + Z)" aria-label="Redo" disabled>
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          </button>
+          <span class="toolbar-sep"></span>
+
+          <div class="dropdown" id="headingDropdown">
+            <button class="tool-btn dropdown-trigger" id="headingDropdownTrigger" title="Headings (Ctrl + Alt + 1..6)" aria-label="Heading Options" aria-haspopup="true" aria-expanded="false">
+              <i class="fa-solid fa-heading" aria-hidden="true"></i>
+              <span class="dropdown-label">Heading</span>
+              <i class="fa-solid fa-chevron-down dropdown-arrow" aria-hidden="true"></i>
+            </button>
+            <div class="dropdown-menu" id="headingMenu" role="menu" aria-label="Heading Levels">
+              <button class="dropdown-item" data-heading="1" role="menuitem">
+                <span class="heading-tag">H1</span>
+                <span class="heading-desc">Heading 1</span>
+                <kbd class="shortcut-hint">Ctrl + Alt + 1</kbd>
+              </button>
+              <button class="dropdown-item" data-heading="2" role="menuitem">
+                <span class="heading-tag">H2</span>
+                <span class="heading-desc">Heading 2</span>
+                <kbd class="shortcut-hint">Ctrl + Alt + 2</kbd>
+              </button>
+              <button class="dropdown-item" data-heading="3" role="menuitem">
+                <span class="heading-tag">H3</span>
+                <span class="heading-desc">Heading 3</span>
+                <kbd class="shortcut-hint">Ctrl + Alt + 3</kbd>
+              </button>
+              <button class="dropdown-item" data-heading="4" role="menuitem">
+                <span class="heading-tag">H4</span>
+                <span class="heading-desc">Heading 4</span>
+                <kbd class="shortcut-hint">Ctrl + Alt + 4</kbd>
+              </button>
+              <button class="dropdown-item" data-heading="5" role="menuitem">
+                <span class="heading-tag">H5</span>
+                <span class="heading-desc">Heading 5</span>
+                <kbd class="shortcut-hint">Ctrl + Alt + 5</kbd>
+              </button>
+              <button class="dropdown-item" data-heading="6" role="menuitem">
+                <span class="heading-tag">H6</span>
+                <span class="heading-desc">Heading 6</span>
+                <kbd class="shortcut-hint">Ctrl + Alt + 6</kbd>
+              </button>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" data-heading="0" role="menuitem">
+                <span class="heading-tag">¶</span>
+                <span class="heading-desc">Normal Text</span>
+                <kbd class="shortcut-hint">Ctrl + Alt + 0</kbd>
+              </button>
+            </div>
+          </div>
+          <span class="toolbar-sep"></span>
+
+          <button class="tool-btn" data-format="bold" title="Bold (Ctrl + B)" aria-label="Bold">
+            <i class="fa-solid fa-bold" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" data-format="italic" title="Italic (Ctrl + I)" aria-label="Italic">
+            <i class="fa-solid fa-italic" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" data-format="underline" title="Underline (Ctrl + U)" aria-label="Underline">
+            <i class="fa-solid fa-underline" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" data-format="strike" title="Strikethrough" aria-label="Strikethrough">
+            <i class="fa-solid fa-strikethrough" aria-hidden="true"></i>
+          </button>
+          <span class="toolbar-sep"></span>
+
+          <button class="tool-btn" data-format="quote" title="Quote" aria-label="Blockquote">
+            <i class="fa-solid fa-quote-left" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" data-format="code" title="Code Block" aria-label="Code Block">
+            <i class="fa-solid fa-code" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" data-format="link" title="Link (Ctrl + K)" aria-label="Insert Link">
+            <i class="fa-solid fa-link" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" data-format="ul" title="Bullet List" aria-label="Bullet List">
+            <i class="fa-solid fa-list-ul" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" data-format="ol" title="Numbered List" aria-label="Numbered List">
+            <i class="fa-solid fa-list-ol" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" data-format="task" title="Task List" aria-label="Task List">
+            <i class="fa-solid fa-square-check" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" data-format="table" title="Table" aria-label="Insert Table">
+            <i class="fa-solid fa-table" aria-hidden="true"></i>
+          </button>
+          <span class="toolbar-sep"></span>
+
+          <button class="tool-btn" id="btnCopyRaw" title="Copy Raw Markdown" aria-label="Copy Raw Markdown">
+            <i class="fa-regular fa-copy" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="editor-body">
+        <textarea 
+          id="markdownInput" 
+          class="markdown-input" 
+          placeholder="Type or paste your Markdown here..."
+          spellcheck="true"
+          aria-label="Markdown text editor"
+        ></textarea>
+      </div>
+    </section>
+
+    <div class="resizer" id="paneResizer" title="Drag to resize panes (double-click to reset)"></div>
+
+    <section class="pane preview-pane" id="previewPane" aria-label="Markdown Live Preview">
+      <div class="pane-header">
+        <div class="pane-header-left">
+          <div class="pane-label">
+            <i class="fa-regular fa-eye" aria-hidden="true"></i>
+            <span>LIVE PREVIEW</span>
+          </div>
+          <span class="pane-label-sep" aria-hidden="true">•</span>
+          <span class="reading-time" id="readingTime" aria-live="polite">1 min read</span>
+        </div>
+        <div class="toolbar preview-toolbar" role="toolbar" aria-label="Preview Tools">
+          <button class="tool-btn active" id="btnSyncScroll" title="Toggle Synchronized Scrolling" aria-label="Toggle Synchronized Scrolling" aria-pressed="true">
+            <i class="fa-solid fa-arrows-up-down" aria-hidden="true"></i>
+          </button>
+          <button class="tool-btn" id="btnCopyHtml" title="Copy Rendered HTML" aria-label="Copy Rendered HTML">
+            <i class="fa-solid fa-file-code" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="preview-body" id="previewBody">
+        <article class="markdown-preview" id="markdownPreview" role="region" aria-live="polite">
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="clearModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h3 id="modalTitle" class="modal-title">Clear Document?</h3>
+      </div>
+      <div class="modal-body">
+        <p>This will erase all content in the editor and reset to an empty state. This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelClear">Cancel</button>
+        <button class="btn btn-primary" id="btnConfirmClear">Clear Document</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
