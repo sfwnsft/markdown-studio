@@ -6,8 +6,6 @@ A lightweight, client-side Markdown editor and exporter built with HTML, CSS, an
 
 **Live:** [sfwnsft.github.io/markdown-studio](https://sfwnsft.github.io/markdown-studio)  
 
----
-
 ## Features
 
 - **Real-Time Split-Pane Preview:** Write Markdown in the editor pane and see the formatted output rendered instantaneously alongside it.
@@ -15,8 +13,6 @@ A lightweight, client-side Markdown editor and exporter built with HTML, CSS, an
 - **Multi-Format Export:** Download as `.md`, `.html`, or PDF.
 - **Auto-Save:** Automatically caches your current draft in the browser's `localStorage` so you never lose work on accidental tab closures or refreshes.
 - **Responsive:** Optimized for mobile and desktop screens.
-
----
 
 ## Quick Start
 
@@ -30,7 +26,6 @@ cd markdown-studio
 # Open directly in browser
 open index.html
 ```
----
 
 ## Project Structure
 
@@ -41,8 +36,6 @@ markdown-studio
 ├── app.js
 └── README.md
 ```
-
----
 
 ## License
 
